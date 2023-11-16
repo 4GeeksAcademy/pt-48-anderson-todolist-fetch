@@ -6,13 +6,41 @@ import './App.css';
 function App() {
   const [inputValue, setInputValue] = useState('');
   const [list, setList] = useState([]);
+ 
+  const SERVER_URL =
+  'https://playground.4geeks.com/apis/fake/todos/user/Anderson';
+  const GET_HTTP_METHOD = 'GET';
+  const PUT_HTTP_METHOD = 'PUT';
+ 
+  
 
   const obtenerInfoServer = async () => {
  
-      const response = await fetch('https://playground.4geeks.com/apis/fake/todos/user/Anderson');
+      const response = await fetch(SERVER_URL, { method: GET_HTTP_METHOD });
       const data = await response.json();
       setList(data);
 
+  }; 
+  const createNewTodo = async (label) => {
+    const newTodo = { label, id: '', done: false };
+    const state = [...list, newTodo];
+    await fetch(SERVER_URL, {
+      method: PUT_HTTP_METHOD,
+      body: JSON.stringify(state),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    await obtenerInfoServer();
+  };
+  const deleteTodo = async (label) => {
+    const updatedList = list.filter((todo) => todo.label !== label);
+    await fetch(SERVER_URL, {
+                    method: PUT_HTTP_METHOD,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedList),
+                  });
+                 await obtenerInfoServer(); 
   };
 
   useEffect(() => {
@@ -30,39 +58,20 @@ function App() {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
-                  const newTodo = { label: inputValue, done: false };
-                  const newList = [ newTodo, ...list];
-                  fetch('https://playground.4geeks.com/apis/fake/todos/user/Anderson', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newList),
-                    
-                  })
-                  .then(() => {
-                    setList(newList);
-                    setInputValue('');
-                    console.log(newList)
-                  })
-                  
-                  
-                }
-              }}
+                  createNewTodo(inputValue);
+                  setInputValue('');
+                     }}
+              }
               placeholder='What do you need to do?'
             />
           
           </li>
-          {list.map((task, index) => (
-            <li key={index}>
-              {task.label}{' '}
-              <button onClick={() => {
-                  const updatedList = list.filter((_, currentIndex) => index !== currentIndex);
-                  fetch('https://playground.4geeks.com/apis/fake/todos/user/Anderson', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedList),
-                  });
-                  obtenerInfoServer(); 
-              }}><TiDeleteOutline /></button>
+          {list.map(({id, done,label}, index) => (
+            <li key={id}>
+              {label}{' '}
+              <button onClick={() => 
+                  deleteTodo(label)
+              }><TiDeleteOutline /></button>
             </li>
           ))}
           <li>{list.length} items left</li>
